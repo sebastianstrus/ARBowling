@@ -59,7 +59,7 @@ struct ContentView : View {
                 stopApplyingForce: arView.stopApplyingForce)
         }.alert(isPresented: $showAlert) {
             Alert(
-                title: Text(showGameOver ? "You lost!" : "You won!"),
+                title: Text(showGameOver ? "You lost!" : "You win!"),
                 dismissButton: .default(Text("Ok")) {
                     showAlert = false
                 }
@@ -253,7 +253,7 @@ struct ControlsView: View {
                 Spacer()
                 arrowButton(direction: .down)
                 Spacer()
-            }//.padding(.bottom, 50)
+            }.padding(.bottom, 50)
         }
         .padding(.horizontal)
     }
