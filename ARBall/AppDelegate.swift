@@ -18,6 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         BallPhysicsSystem.registerSystem()
         PinSystem.registerSystem()
+        CupSystem.registerSystem()
 
         // Create the SwiftUI view that provides the window contents.
         let contentView = ContentView()

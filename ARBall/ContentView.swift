@@ -41,7 +41,11 @@ enum ForceDirection {
 
 struct ContentView : View {
     
+    @State var showAlert: Bool = false
     @State var showGameOver: Bool = false
+    @State var showWin: Bool = false
+    
+    
     
     private let arView = ARGameView()
     
@@ -53,15 +57,21 @@ struct ContentView : View {
             ControlsView(
                 startApplyingForce: arView.startApplyingForce(direction:),
                 stopApplyingForce: arView.stopApplyingForce)
-        }.alert(isPresented: $showGameOver) {
+        }.alert(isPresented: $showAlert) {
             Alert(
-                title: Text("You won!"),
+                title: Text(showGameOver ? "You lost!" : "You won!"),
                 dismissButton: .default(Text("Ok")) {
-                    showGameOver = false
+                    showAlert = false
                 }
             )
+            
+
         }.onReceive(NotificationCenter.default.publisher(for: PinSystem.gameOverNotification)) { _ in
+            showAlert = true
             showGameOver = true
+        }.onReceive(NotificationCenter.default.publisher(for: CupSystem.winNotification)) { _ in
+            showAlert = true
+            showWin = true
         }
     }
 }
@@ -74,16 +84,13 @@ struct ARViewContainer: UIViewRepresentable {
         
         //let arView = ARView(frame: .zero)
         
-        // Load the "Box" scene from the "Experience" Reality File
         if let rollABall = try? Experience.loadRollABall() {
             setupComponent(in: rollABall)
             
-            // Add the box anchor to the scene
             arView.scene.anchors.append(rollABall)
         }
         
         return arView
-        
     }
     
     func updateUIView(_ uiView: ARGameView, context: Context) {}
@@ -96,13 +103,20 @@ struct ARViewContainer: UIViewRepresentable {
         rollBall.pinEntities.forEach { pin in
             pin.components[PinComponent.self] = PinComponent()
         }
+        
+        if let cup = rollBall.cup {
+            cup.components[CupComponent.self] = CupComponent()
+        }
     }
-    
 }
 
 struct BallComponent: Component {
     static let query = EntityQuery(where: .has(BallComponent.self))
     var direction: ForceDirection?
+}
+
+struct CupComponent: Component {
+    static let query = EntityQuery(where: .has(CupComponent.self))
 }
 
 class PinSystem: System {
@@ -111,11 +125,8 @@ class PinSystem: System {
     required init(scene: RealityKit.Scene) { }
     
     func update(context: SceneUpdateContext) {
-        // Get all the pins in the scene
         let pins = context.scene.performQuery(PinComponent.query)
-        // Check their upright orientation to determine if they've been knocked over
         if checkGameOver(pins: pins) {
-            // if so, then post a game over information
             NotificationCenter.default.post(name: PinSystem.gameOverNotification, object: nil)
             
         }
@@ -126,13 +137,43 @@ class PinSystem: System {
         
         for pin in pins {
             let pinUpVector = pin.transform.matrix.columns.1.xyz
-            if dot(pinUpVector, upVector) > 0.01 {
-                // The game is not over if there is still any pin standing
-                return false
+           
+            if dot(pinUpVector, upVector) < 0.01 {
+                return true
             }
         }
         
-        return true
+        
+        return false
+    }
+}
+
+class CupSystem: System {
+    
+    static let winNotification = Notification.Name("Win")
+    required init(scene: RealityKit.Scene) { }
+    
+    func update(context: SceneUpdateContext) {
+        let cups = context.scene.performQuery(CupComponent.query)
+        
+        if checkWin(cups: cups) {
+            NotificationCenter.default.post(name: CupSystem.winNotification, object: nil)
+            
+        }
+    }
+    
+    private func checkWin(cups: QueryResult<Entity>) -> Bool {
+        let upVector = SIMD3<Float>(0, 1, 0)
+        
+        for cup in cups {
+            let cupUpVector = cup.transform.matrix.columns.1.xyz
+            
+            if dot(cupUpVector, upVector) < 0.01 {
+                return true
+            }
+        }
+        
+        return false
     }
 }
 
@@ -143,13 +184,10 @@ struct PinComponent: Component {
 class ARGameView: ARView {
     
     func startApplyingForce(direction: ForceDirection) {
-        // Retrieve the ball entity from scene graph
         if let ball = scene.performQuery(BallComponent.query).first {
             
-            // Get its BalllComponent, which holds the force direction
             var ballState = ball.components[BallComponent.self] as? BallComponent
             
-            // Set the force direction to the incomming direction
             ballState?.direction = direction
             ball.components[BallComponent.self] = ballState
         }
@@ -158,10 +196,8 @@ class ARGameView: ARView {
     func stopApplyingForce() {
         if let ball = scene.performQuery(BallComponent.query).first {
             
-            // Get its BalllComponent, which holds the force direction
             var ballState = ball.components[BallComponent.self] as? BallComponent
             
-            // Set the force direction to nil
             ballState?.direction = nil
             ball.components[BallComponent.self] = ballState
         }
@@ -170,7 +206,7 @@ class ARGameView: ARView {
 
 class BallPhysicsSystem: System {
     
-    let ballSpeed: Float = 0.01
+    let ballSpeed: Float = 0.03
     
     required init(scene: RealityKit.Scene) { }
     
@@ -217,7 +253,7 @@ struct ControlsView: View {
                 Spacer()
                 arrowButton(direction: .down)
                 Spacer()
-            }
+            }//.padding(.bottom, 50)
         }
         .padding(.horizontal)
     }
@@ -249,6 +285,7 @@ extension SIMD4 where Scalar == Float {
         SIMD3<Float>(x: x, y: y, z: z)
     }
 }
+
 #if DEBUG
 struct ContentView_Previews : PreviewProvider {
     static var previews: some View {
