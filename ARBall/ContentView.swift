@@ -98,10 +98,15 @@ struct ARViewContainer: UIViewRepresentable {
     private func setupComponent(in rollBall: Experience.RollABall) {
         if let ball = rollBall.ball {
             ball.components[BallComponent.self] = BallComponent()
+            
         }
         
         rollBall.pinEntities.forEach { pin in
             pin.components[PinComponent.self] = PinComponent()
+        }
+        
+        rollBall.wallEntities.forEach { wall in
+            wall.components[WallComponent.self] = WallComponent()
         }
         
         if let cup = rollBall.cup {
@@ -117,6 +122,10 @@ struct BallComponent: Component {
 
 struct CupComponent: Component {
     static let query = EntityQuery(where: .has(CupComponent.self))
+}
+
+struct WallComponent: Component {
+    static let query = EntityQuery(where: .has(WallComponent.self))
 }
 
 class PinSystem: System {
@@ -206,7 +215,7 @@ class ARGameView: ARView {
 
 class BallPhysicsSystem: System {
     
-    let ballSpeed: Float = 0.03
+    let ballSpeed: Float = 0.015
     
     required init(scene: RealityKit.Scene) { }
     
@@ -221,6 +230,8 @@ class BallPhysicsSystem: System {
               let physicsBody = ball as? HasPhysicsBody else {
             return
         }
+        
+
         
         if let forceDirection = ballState.direction?.vector {
             let impulse = ballSpeed * forceDirection
