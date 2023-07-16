@@ -21,7 +21,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         CupSystem.registerSystem()
 
         // Create the SwiftUI view that provides the window contents.
-        let contentView = ContentView()
+        let contentView = MainMenuView()//GameView()
 
         // Use a UIHostingController as window root view controller.
         let window = UIWindow(frame: UIScreen.main.bounds)
