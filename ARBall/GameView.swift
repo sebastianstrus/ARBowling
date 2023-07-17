@@ -7,6 +7,7 @@
 
 import SwiftUI
 import RealityKit
+import ARKit
 
 enum ForceDirection {
     case up, down, left, right
@@ -58,28 +59,13 @@ struct GameView : View {
             ARViewContainer(level: level, number: number, arView: arView)
                 .edgesIgnoringSafeArea(.all)
             
-            ControlsView(
-                startApplyingForce: arView.startApplyingForce(direction:),
-                stopApplyingForce: arView.stopApplyingForce)
+//            ControlsView(
+//                startApplyingForce: arView.startApplyingForce(direction:),
+//                stopApplyingForce: arView.stopApplyingForce)
 //            Button("Dismiss Modal") {
 //                            dismiss()
 //                        }
-        }.alert(isPresented: $showAlert) {
-            Alert(
-                title: Text(showGameOver ? "You lost!" : "You win!"),
-                dismissButton: .default(Text("Ok")) {
-                    showAlert = false
-                }
-            )
-            
-
-//        }.onReceive(NotificationCenter.default.publisher(for: PinSystem.gameOverNotification)) { _ in
-//            showAlert = true
-//            showGameOver = true
-//        }.onReceive(NotificationCenter.default.publisher(for: CupSystem.winNotification)) { _ in
-//            showAlert = true
-//            showWin = true
-        }
+        }.navigationBarHidden(true)
     }
 }
 
@@ -127,6 +113,16 @@ struct ARViewContainer: UIViewRepresentable {
             case 6:
                 if let rollABall = try? Experience.loadEasy6() {
                     setupComponentEasy6(in: rollABall)
+                    
+                    let boxResource = MeshResource.generateBox(size: 0.08)
+                    let myMaterial = SimpleMaterial(color: .blue, roughness: 0, isMetallic: true)
+                    let myEntity = ModelEntity(mesh: boxResource, materials: [myMaterial])
+                    if let anchor = rollABall.findEntity(named: "My Anchor Entity") {
+                        anchor.addChild(myEntity)
+                    }
+                    
+//                    let anchorEntity = AnchorEntity(world: Transform())
+//                    arView.scene.addAnchor(anchorEntity)
                     
                     arView.scene.anchors.append(rollABall)
                 }
@@ -554,6 +550,10 @@ class BallPhysicsSystem: System {
             let impulse = ballSpeed * forceDirection
             physicsBody.applyLinearImpulse(impulse, relativeTo: nil)
         }
+        
+        
+//        let objectPosition = node.simdWorldPosition
+//        distance(devicePosition,objectPosition)
     }
 }
 

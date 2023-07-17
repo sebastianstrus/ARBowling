@@ -24,11 +24,11 @@ enum Level: String, CaseIterable {
     var data: [Int] {
         switch self {
         case .easy:
-            return [1, 2, 3, 4, 5, 6]//.map { "\($0) }
+            return [1, 2, 3, 4, 5, 6]
         case .medium:
-            return [1, 2, 3, 4]//.map { "\($0)" }
+            return [1, 2, 3, 4]
         case .hard:
-            return [1, 2]//.map { "\($0)" }
+            return [1, 2]
         }
     }
 }
@@ -93,7 +93,7 @@ struct MainMenuView: View {
 
          
             .navigationDestination(for: Level.self) { level in
-                LevelView(level: level)
+                GameView(level: level, number: 2)
             }
          
             //.navigationTitle("Main menu")
