@@ -59,9 +59,9 @@ struct GameView : View {
             ARViewContainer(level: level, number: number, arView: arView)
                 .edgesIgnoringSafeArea(.all)
             
-//            ControlsView(
-//                startApplyingForce: arView.startApplyingForce(direction:),
-//                stopApplyingForce: arView.stopApplyingForce)
+            ControlsView(
+                startApplyingForce: arView.startApplyingForce(direction:),
+                stopApplyingForce: arView.stopApplyingForce)
 //            Button("Dismiss Modal") {
 //                            dismiss()
 //                        }
@@ -528,7 +528,7 @@ class ARGameView: ARView {
 
 class BallPhysicsSystem: System {
     
-    let ballSpeed: Float = 0.015
+    let ballSpeed: Float = 1
     
     required init(scene: RealityKit.Scene) { }
     
