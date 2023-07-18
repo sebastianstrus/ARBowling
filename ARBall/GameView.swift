@@ -528,7 +528,7 @@ class ARGameView: ARView {
 
 class BallPhysicsSystem: System {
     
-    let ballSpeed: Float = 1
+    let ballSpeed: Float = 80
     
     required init(scene: RealityKit.Scene) { }
     
